@@ -7,9 +7,8 @@ import IconButton from "@mui/material/IconButton";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import "../index.css";
-
-import Results from "./Results";
 
 export default function Home(props) {
   const VisuallyHiddenInput = styled("input")({
@@ -24,6 +23,23 @@ export default function Home(props) {
     width: 1,
   });
 
+  const theme = createTheme({
+    typography: {
+      subtitle1: {
+        fontSize: 14,
+      },
+      subtitle2: {
+        fontSize: 16,
+        fontWeight: 600,
+      },
+      h4: {
+        fontWeight: 500,
+        fontSize: 28,
+        fontVariant: "small-caps",
+      },
+    },
+  });
+
   const [file, setFile] = useState();
 
   function handleChange(e) {
@@ -36,81 +52,84 @@ export default function Home(props) {
   }
 
   return (
-    <Box
-      sx={{
-        justifyContent: "center",
-        display: "flex",
-        height: file ? "auto" : "100vh",
-      }}
-    >
+    <ThemeProvider theme={theme}>
       <Box
-        width={"600px"}
-        className="center-alignment-column"
         sx={{
-          backgroundColor: "#F2FFFF",
+          justifyContent: "center",
+          display: "flex",
+          height: file ? "auto" : "100vh",
         }}
       >
-        <Box className="dynamic-logo">
-          <img src="/con.png" alt="CoN logo" width="75%" />
-        </Box>
-        <Box className="center-alignment-column" width={"90%"} mb={2}>
-          <Typography variant="h6">
-            Uncertain about an item's recyclability?
-          </Typography>
-          <p>Snap a picture and upload it here for quick identification.</p>
-          <br />
-          <br />
-          <p>
-            Our AI-powered system analyses the image to determine if it's
-            recylable, making sustainable choices effortless.
-          </p>
-        </Box>
-
-        {file && (
-          <Box
-            mb={5}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "column",
-            }}
-          >
-            <IconButton
-              aria-label="delete image"
-              style={{
-                color: "#aaa",
-              }}
-              onClick={() => handleOnRemoveImage()}
-            >
-              <CancelIcon />
-            </IconButton>
-            <img src={file} alt="uploaded" width="50%" />
+        <Box
+          width={"500px"}
+          className="center-alignment-column"
+          sx={{
+            backgroundColor: "#F2FFFF",
+          }}
+        >
+          <Box className="dynamic-logo">
+            <img src="/con.png" alt="CoN logo" width="65%" />
           </Box>
-        )}
+          <Box className="center-alignment-column" width={"80%"} mb={2}>
+            <Typography variant="subtitle2">
+              Uncertain about an item's recyclability?
+            </Typography>
+            <Typography variant="subtitle1" sx={{ marginBottom: "25px" }}>
+              Snap a picture and upload it here for quick identification.
+            </Typography>
 
-        <Box mt={3}>
-          {file ? (
-            <Link to="/results">
-              <Button
-                sx={{ marginBottom: "2rem" }}
-                component="label"
-                variant="contained"
+            <Typography variant="subtitle1">
+              Our AI-powered system analyses the image to determine if it's
+              recylable, making sustainable choices effortless.
+            </Typography>
+          </Box>
+
+          {file && (
+            <Box
+              mb={5}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                flexDirection: "column",
+              }}
+            >
+              <IconButton
+                aria-label="delete image"
+                style={{
+                  color: "#aaa",
+                }}
+                onClick={() => handleOnRemoveImage()}
               >
-                Can Or Not!
-              </Button>
-            </Link>
-          ) : (
-            <Button component="label" variant="contained">
-              Upload an image!
-              <VisuallyHiddenInput
-                accept=".png,.jpg,.jpeg"
-                type="file"
-                onChange={handleChange}
-              />
-            </Button>
+                <CancelIcon />
+              </IconButton>
+              <img src={file} alt="uploaded" width="50%" />
+            </Box>
           )}
+
+          <Box mt={3}>
+            {file ? (
+              <Link to="/results">
+                <Button
+                  sx={{ marginBottom: "2rem" }}
+                  component="label"
+                  variant="contained"
+                >
+                  Can Or Not!
+                </Button>
+              </Link>
+            ) : (
+              <Button component="label" variant="contained">
+                Upload an image!
+                <VisuallyHiddenInput
+                  accept=".png,.jpg,.jpeg"
+                  type="file"
+                  onChange={handleChange}
+                />
+              </Button>
+            )}
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </ThemeProvider>
   );
 }

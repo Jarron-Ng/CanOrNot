@@ -9,27 +9,86 @@ import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+
+import { motion } from "framer-motion";
 
 import "../index.css";
 import description from "./materialDescription";
 
 export default function Results(props) {
+  const theme = createTheme({
+    typography: {
+      subtitle1: {
+        fontSize: 12,
+      },
+      subtitle2: {
+        fontSize: 14,
+        fontWeight: 600,
+      },
+      h4: {
+        fontWeight: 700,
+        fontSize: 28,
+        fontVariant: "small-caps",
+      },
+      poster1: {
+        color: "#72c13a",
+        fontSize: 32,
+        fontFamily: "Copperplate, fantasy",
+      },
+      poster2: {
+        color: "#ff3d3d",
+        fontSize: 32,
+        fontFamily: "Copperplate, fantasy",
+      },
+    },
+  });
+
+  const draw = {
+    hidden: { pathLength: 0, opacity: 0 },
+    visible: (i) => {
+      const delay = 1 + i * 0.5;
+      return {
+        pathLength: 1,
+        opacity: 1,
+        transition: {
+          pathLength: { delay, type: "spring", duration: 1.5, bounce: 0 },
+          opacity: { delay, duration: 0.01 },
+        },
+      };
+    },
+  };
+
   const recyclableClasses = ["Cardboard", "Glass", "Metal", "Paper"];
-  const unrecyclableClasses = ["trash"];
+  const mapPredictionClass = {
+    0: "Cardboard",
+    1: "Glass",
+    2: "Metal",
+    3: "Paper",
+  };
 
   const [prediction, setPrediction] = useState();
   const [recyclable, setRecyclable] = useState();
   const [notRecyclable, setNotRecyclable] = useState();
+  const [plasticDetected, setPlasticDetected] = useState(false);
   const [resinCode, setResinCode] = useState("");
 
   useEffect(() => {
-    if (props.image) {
-      sendImageToBackend();
-    }
-  }, [props.image]);
+    sendImageToBackend();
+  }, []);
 
   const handleChange = (event) => {
     setResinCode(event.target.value);
+    if (event.target.value === 1) {
+      setRecyclable(false);
+      setNotRecyclable(true);
+    } else if (event.target.value === 2) {
+      setNotRecyclable(false);
+      setRecyclable(true);
+    } else if (event.target.value === 3) {
+      setNotRecyclable(false);
+      setRecyclable(true);
+    }
   };
 
   const sendImageToBackend = async () => {
@@ -46,12 +105,17 @@ export default function Results(props) {
 
       if (response.ok) {
         const result = await response.json();
-        setPrediction(result);
-        if (recyclableClasses.includes(result)) {
+        setPrediction(mapPredictionClass[result]);
+
+        if (recyclableClasses.includes(mapPredictionClass[result])) {
           setRecyclable(true);
-        } else if (result === "Plastic") {
-          console.log("plastic");
+        }
+        // if "4" is returned, model detected it is plastic
+        else if (result === 4) {
+          setPrediction("Plastic");
+          setPlasticDetected(true);
         } else {
+          setPrediction("Trash");
           setNotRecyclable(true);
         }
       } else {
@@ -63,51 +127,104 @@ export default function Results(props) {
   };
 
   return (
-    <Box
-      sx={{
-        justifyContent: "center",
-        display: "flex",
-        height: "100vh",
-      }}
-    >
+    <ThemeProvider theme={theme}>
       <Box
-        width={"600px"}
-        className="center-alignment-column"
         sx={{
-          backgroundColor: "#F2FFFF",
+          justifyContent: "center",
+          display: "flex",
+          minHeight: "100vh",
         }}
       >
-        <Grid container className="center-alignment-row-mobile">
-          <Grid item xs={3}>
-            <Link to="/">
-              <img src="/con.png" alt="CoN logo" width="90%" />
-            </Link>
-          </Grid>
-          <Grid item xs={9}>
-            <b>Uncertain about an item's recyclability?</b>
-            <p>Snap a picture and upload it here for quick identification</p>
-          </Grid>
-        </Grid>
-
         <Box
+          width={"600px"}
+          className="center-alignment-column"
           sx={{
-            display: "flex",
-            alignItems: "center",
-            flexDirection: "column",
+            backgroundColor: "#F2FFFF",
           }}
         >
-          <img
-            src={URL.createObjectURL(props.image)}
-            alt="uploaded_img"
-            width="50%"
-          />
-          <Typography variant="h4" sx={{ marginTop: "20px" }}>
-            {prediction}
-          </Typography>
-          {description.map((item, index) => {
-            if (item.material === prediction && item.material === "Plastic") {
-              return (
-                <>
+          <Grid container className="center-alignment-row-mobile">
+            <Grid item xs={3}>
+              <Link to="/">
+                <img src="/con.png" alt="CoN logo" width="90%" />
+              </Link>
+            </Grid>
+            <Grid item xs={9}>
+              <b>Uncertain about an item's recyclability?</b>
+              <p>Snap a picture and upload it here for quick identification</p>
+            </Grid>
+          </Grid>
+
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexDirection: "column",
+            }}
+          >
+            <img
+              src={URL.createObjectURL(props.image)}
+              alt="uploaded_img"
+              width="50%"
+            />
+            <Typography variant="h4" sx={{ marginTop: "10px" }}>
+              {prediction}
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{ marginTop: "-20px" }}
+            ></Typography>
+            {description.map((item, index) => {
+              if (item.material === prediction && plasticDetected) {
+                /*  div for plastic resin code to render */
+                return (
+                  <>
+                    <Box
+                      key={index}
+                      sx={{
+                        marginTop: "20px",
+                        padding: "20px",
+                        backgroundColor: "#F2FFFF",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <Typography>{item.description}</Typography>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ marginBottom: "25px" }}
+                      >
+                        But, do you know: <br />
+                        Not all types of plastic are recyclable!
+                      </Typography>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ marginBottom: "25px" }}
+                      >
+                        Locate the resin code on your plastic object and select
+                        below for more precise recyclability determination!
+                      </Typography>
+                    </Box>
+                    <Box sx={{ minWidth: 250, marginBottom: "25px" }}>
+                      <FormControl fullWidth>
+                        <InputLabel id="demo-simple-select-label">
+                          Resin Code
+                        </InputLabel>
+                        <Select
+                          labelId="demo-simple-select-label"
+                          id="demo-simple-select"
+                          value={resinCode}
+                          label="Age"
+                          onChange={handleChange}
+                        >
+                          <MenuItem value={1}>PVC</MenuItem>
+                          <MenuItem value={2}>PPDE</MenuItem>
+                          <MenuItem value={3}>HPDE</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </>
+                );
+              } else if (item.material === prediction) {
+                return (
                   <Box
                     key={index}
                     sx={{
@@ -118,54 +235,48 @@ export default function Results(props) {
                     }}
                   >
                     <Typography>{item.description}</Typography>
-                    {item.additional && (
-                      <Typography>{item.additional}</Typography>
-                    )}
                   </Box>
-                  <Box sx={{ minWidth: 120 }}>
-                    <FormControl fullWidth>
-                      <InputLabel id="demo-simple-select-label">
-                        Resin Code
-                      </InputLabel>
-                      <Select
-                        labelId="demo-simple-select-label"
-                        id="demo-simple-select"
-                        value={resinCode}
-                        label="Age"
-                        onChange={handleChange}
-                      >
-                        <MenuItem value={1}>PVC</MenuItem>
-                        <MenuItem value={2}>PPDE</MenuItem>
-                        <MenuItem value={3}>HPDE</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Box>
-                </>
-              );
-            } else if (item.material === prediction) {
-              return (
-                <Box
-                  key={index}
-                  sx={{
-                    marginTop: "20px",
-                    padding: "20px",
-                    backgroundColor: "#F2FFFF",
-                    borderRadius: "10px",
-                  }}
-                >
-                  <Typography>{item.description}</Typography>
-                </Box>
-              );
-            } else {
-              return null;
-            }
-          })}
-          {recyclable && <Typography variant="h4">Can recycle!</Typography>}
-          {notRecyclable && (
-            <Typography variant="h4">Cannot recycle!</Typography>
+                );
+              } else {
+                return null;
+              }
+            })}
+            {recyclable && (
+              <Typography variant="poster1">CAN RECYCLE!</Typography>
+            )}
+            {notRecyclable && (
+              <Typography variant="poster2">CANNOT RECYCLE!</Typography>
+            )}
+          </Box>
+          {prediction ? (
+            <Link to="/">
+              <Button
+                component="label"
+                variant="contained"
+                sx={{ marginTop: "25px" }}
+              >
+                Predict another item!
+              </Button>
+            </Link>
+          ) : (
+            "Loading..."
+            // <motion.svg
+            //   viewBox="0 0 150 150"
+            //   initial="hidden"
+            //   animate="visible"
+            // >
+            //   <motion.circle
+            //     cx="75"
+            //     cy="75"
+            //     r="20"
+            //     stroke="#ff0055"
+            //     variants={draw}
+            //     custom={4}
+            //   />
+            // </motion.svg>
           )}
         </Box>
       </Box>
-    </Box>
+    </ThemeProvider>
   );
 }

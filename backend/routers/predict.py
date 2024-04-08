@@ -6,6 +6,7 @@ import os
 from PIL import Image
 import joblib
 import cv2
+import time
 
 from keras.models import load_model
 from keras.applications.resnet50 import preprocess_input
@@ -33,6 +34,7 @@ async def predict(image: UploadFile = File(...)):
     # Detect whether the image is recyclable or not
     # Return the prediction result
     # Step 1: Load saved models
+    #time.sleep(1000)
     models_directory = os.path.join(os.getcwd(), 'models')
     resnet_model_path = os.path.join(models_directory, 'model_resnet.h5')
     vgg16_model_path = os.path.join(models_directory, 'model_vgg16.h5')
@@ -53,7 +55,6 @@ async def predict(image: UploadFile = File(...)):
 
     # # # Step 3: Make predictions using the meta model
     final_predictions = loaded_meta_model.predict(stacked_predictions)
-    print(f"Final predictions: {final_predictions[0]}")
 
     # # Step 5: Get the final prediction
     # final_prediction = final_predictions_resnet_bagging[0]  # Assuming you have only one image
