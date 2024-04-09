@@ -34,7 +34,8 @@ async def predict(image: UploadFile = File(...)):
     # Detect whether the image is recyclable or not
     # Return the prediction result
     # Step 1: Load saved models
-    #time.sleep(1000)
+    image_bytes = await image.read()
+
     models_directory = os.path.join(os.getcwd(), 'models')
     resnet_model_path = os.path.join(models_directory, 'model_resnet.h5')
     vgg16_model_path = os.path.join(models_directory, 'model_vgg16.h5')
@@ -44,9 +45,7 @@ async def predict(image: UploadFile = File(...)):
     model_vgg16_loaded = load_model(vgg16_model_path)
 
     loaded_meta_model = joblib.load(meta_model_path)
-    print(loaded_meta_model)
 
-    image_bytes = await image.read()
     # # Resize the image
     resized_image_array = resize_image_and_process_input(image_bytes)
 

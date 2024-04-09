@@ -61,7 +61,7 @@ export default function Home(props) {
         }}
       >
         <Box
-          width={"500px"}
+          width={"450px"}
           className="center-alignment-column"
           sx={{
             backgroundColor: "#F2FFFF",

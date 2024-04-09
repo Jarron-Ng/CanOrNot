@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 import Button from "@mui/material/Button";
 import { Typography } from "@mui/material";
 import InputLabel from "@mui/material/InputLabel";
@@ -10,8 +12,13 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import CircularProgress from "@mui/material/CircularProgress";
 
-import { motion } from "framer-motion";
+import SwipeableViews from "react-swipeable-views-react-18-fix";
+import MobileStepper from "@mui/material/MobileStepper";
+import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import Confetti from "react-confetti";
 
 import "../index.css";
 import description from "./materialDescription";
@@ -20,10 +27,10 @@ export default function Results(props) {
   const theme = createTheme({
     typography: {
       subtitle1: {
-        fontSize: 12,
+        fontSize: 14,
       },
       subtitle2: {
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: 600,
       },
       h4: {
@@ -44,19 +51,18 @@ export default function Results(props) {
     },
   });
 
-  const draw = {
-    hidden: { pathLength: 0, opacity: 0 },
-    visible: (i) => {
-      const delay = 1 + i * 0.5;
-      return {
-        pathLength: 1,
-        opacity: 1,
-        transition: {
-          pathLength: { delay, type: "spring", duration: 1.5, bounce: 0 },
-          opacity: { delay, duration: 0.01 },
-        },
-      };
-    },
+  const [activeStep, setActiveStep] = useState(0);
+
+  const handleNext = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+
+  const handleStepChange = (step) => {
+    setActiveStep(step);
   };
 
   const recyclableClasses = ["Cardboard", "Glass", "Metal", "Paper"];
@@ -80,14 +86,26 @@ export default function Results(props) {
   const handleChange = (event) => {
     setResinCode(event.target.value);
     if (event.target.value === 1) {
-      setRecyclable(false);
-      setNotRecyclable(true);
+      setRecyclable(true);
+      setNotRecyclable(false);
     } else if (event.target.value === 2) {
-      setNotRecyclable(false);
       setRecyclable(true);
+      setNotRecyclable(false);
     } else if (event.target.value === 3) {
-      setNotRecyclable(false);
+      setNotRecyclable(true);
+      setRecyclable(false);
+    } else if (event.target.value === 4) {
       setRecyclable(true);
+      setNotRecyclable(false);
+    } else if (event.target.value === 5) {
+      setRecyclable(true);
+      setNotRecyclable(false);
+    } else if (event.target.value === 6) {
+      setNotRecyclable(true);
+      setRecyclable(false);
+    } else if (event.target.value === 7) {
+      setNotRecyclable(true);
+      setRecyclable(false);
     }
   };
 
@@ -136,12 +154,14 @@ export default function Results(props) {
         }}
       >
         <Box
-          width={"600px"}
+          width={"450px"}
           className="center-alignment-column"
           sx={{
             backgroundColor: "#F2FFFF",
           }}
         >
+          {/* {recyclable && <Confetti width={"auto"} recycle={false} />} */}
+
           <Grid container className="center-alignment-row-mobile">
             <Grid item xs={3}>
               <Link to="/">
@@ -166,13 +186,19 @@ export default function Results(props) {
               alt="uploaded_img"
               width="50%"
             />
-            <Typography variant="h4" sx={{ marginTop: "10px" }}>
+            <Typography
+              variant="h4"
+              sx={{ marginTop: "10px", marginBottom: "20px" }}
+            >
               {prediction}
             </Typography>
-            <Typography
-              variant="subtitle1"
-              sx={{ marginTop: "-20px" }}
-            ></Typography>
+            {recyclable && (
+              <Typography variant="poster1">CAN RECYCLE!</Typography>
+            )}
+            {notRecyclable && (
+              <Typography variant="poster2">CANNOT RECYCLE!</Typography>
+            )}
+
             {description.map((item, index) => {
               if (item.material === prediction && plasticDetected) {
                 /*  div for plastic resin code to render */
@@ -189,14 +215,14 @@ export default function Results(props) {
                     >
                       <Typography>{item.description}</Typography>
                       <Typography
-                        variant="subtitle1"
+                        variant="subtitle2"
                         sx={{ marginBottom: "25px" }}
                       >
                         But, do you know: <br />
                         Not all types of plastic are recyclable!
                       </Typography>
                       <Typography
-                        variant="subtitle2"
+                        variant="subtitle1"
                         sx={{ marginBottom: "25px" }}
                       >
                         Locate the resin code on your plastic object and select
@@ -215,9 +241,13 @@ export default function Results(props) {
                           label="Age"
                           onChange={handleChange}
                         >
-                          <MenuItem value={1}>PVC</MenuItem>
-                          <MenuItem value={2}>PPDE</MenuItem>
-                          <MenuItem value={3}>HPDE</MenuItem>
+                          <MenuItem value={1}>PETE</MenuItem>
+                          <MenuItem value={2}>HPDE</MenuItem>
+                          <MenuItem value={3}>V</MenuItem>
+                          <MenuItem value={4}>LDPE</MenuItem>
+                          <MenuItem value={5}>PP</MenuItem>
+                          <MenuItem value={6}>PS</MenuItem>
+                          <MenuItem value={7}>OTHER</MenuItem>
                         </Select>
                       </FormControl>
                     </Box>
@@ -230,23 +260,77 @@ export default function Results(props) {
                     sx={{
                       marginTop: "20px",
                       padding: "20px",
-                      backgroundColor: "#F2FFFF",
                       borderRadius: "10px",
                     }}
                   >
-                    <Typography>{item.description}</Typography>
+                    <Typography variant="subtitle2">Do you know:</Typography>
+                    <SwipeableViews
+                      axis={theme.direction === "rtl" ? "x-reverse" : "x"}
+                      index={activeStep}
+                      onChangeIndex={handleStepChange}
+                      enableMouseEvents
+                    >
+                      {item.description.map((item2, index2) => (
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          key={index2}
+                        >
+                          {Math.abs(activeStep - index2) <= 2 ? (
+                            <Card sx={{ maxWidth: 360, marginBottom: "20px" }}>
+                              <CardContent>
+                                <Typography variant="subtitle1">
+                                  {item2}
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          ) : null}
+                        </Box>
+                      ))}
+                    </SwipeableViews>
+                    <MobileStepper
+                      steps={item.description.length}
+                      position="static"
+                      activeStep={activeStep}
+                      nextButton={
+                        <Button
+                          size="small"
+                          onClick={handleNext}
+                          disabled={activeStep === item.description.length - 1}
+                        >
+                          Next
+                          {theme.direction === "rtl" ? (
+                            <KeyboardArrowLeft />
+                          ) : (
+                            <KeyboardArrowRight />
+                          )}
+                        </Button>
+                      }
+                      backButton={
+                        <Button
+                          size="small"
+                          onClick={handleBack}
+                          disabled={activeStep === 0}
+                        >
+                          {theme.direction === "rtl" ? (
+                            <KeyboardArrowRight />
+                          ) : (
+                            <KeyboardArrowLeft />
+                          )}
+                          Back
+                        </Button>
+                      }
+                    />
+                    <Typography variant="subtitle1">
+                      {item.additional}
+                    </Typography>
                   </Box>
                 );
               } else {
                 return null;
               }
             })}
-            {recyclable && (
-              <Typography variant="poster1">CAN RECYCLE!</Typography>
-            )}
-            {notRecyclable && (
-              <Typography variant="poster2">CANNOT RECYCLE!</Typography>
-            )}
           </Box>
           {prediction ? (
             <Link to="/">
@@ -255,25 +339,19 @@ export default function Results(props) {
                 variant="contained"
                 sx={{ marginTop: "25px" }}
               >
-                Predict another item!
+                Check another item!
               </Button>
             </Link>
           ) : (
-            "Loading..."
-            // <motion.svg
-            //   viewBox="0 0 150 150"
-            //   initial="hidden"
-            //   animate="visible"
-            // >
-            //   <motion.circle
-            //     cx="75"
-            //     cy="75"
-            //     r="20"
-            //     stroke="#ff0055"
-            //     variants={draw}
-            //     custom={4}
-            //   />
-            // </motion.svg>
+            <Box marginTop="20px">
+              <Typography variant="subtitle2">
+                This item Can or Not...?
+              </Typography>
+              <Typography variant="subtitle1" marginBottom="20px">
+                Let's find out!
+              </Typography>
+              <CircularProgress />
+            </Box>
           )}
         </Box>
       </Box>
